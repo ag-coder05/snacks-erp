@@ -1,0 +1,65 @@
+{% extends "erp/base.html" %}
+{% block title %}Dashboard | Snacks ERP{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
+    <p class="text-sm text-slate-500">Live ledger-backed stock, production, and receivables</p>
+  </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div class="bg-white p-5 rounded-xl shadow-sm border">
+    <p class="text-xs uppercase text-slate-500 font-semibold">Total Invoiced Sales</p>
+    <p class="text-2xl font-bold text-indigo-900 mt-1">₹{{ total_sales }}</p>
+  </div>
+  <div class="bg-white p-5 rounded-xl shadow-sm border">
+    <p class="text-xs uppercase text-slate-500 font-semibold">Total Receivables (Outstanding)</p>
+    <p class="text-2xl font-bold text-amber-700 mt-1">₹{{ total_outstanding }}</p>
+  </div>
+  <div class="bg-white p-5 rounded-xl shadow-sm border">
+    <p class="text-xs uppercase text-slate-500 font-semibold">Variance Alerts</p>
+    <p class="text-2xl font-bold {% if variance_alerts %}text-rose-600{% else %}text-emerald-600{% endif %} mt-1">
+      {{ variance_alerts|length }}
+    </p>
+  </div>
+</div>
+
+<!-- Live Stock Table -->
+<div class="bg-white rounded-xl shadow-sm border overflow-hidden mb-6">
+  <div class="px-5 py-3 border-b bg-slate-50 font-semibold text-slate-700">Live Inventory (From Stock Ledger)</div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-2.5">SKU</th>
+          <th class="px-4 py-2.5">Item</th>
+          <th class="px-4 py-2.5">Category</th>
+          <th class="px-4 py-2.5 text-right">Current Stock</th>
+          <th class="px-4 py-2.5 text-right">Weighted Avg Cost</th>
+          <th class="px-4 py-2.5">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for row in stock_summary %}
+        <tr>
+          <td class="px-4 py-2.5 font-mono text-xs">{{ row.item.sku }}</td>
+          <td class="px-4 py-2.5 font-medium">{{ row.item.name }}</td>
+          <td class="px-4 py-2.5">{{ row.item.get_category_display }}</td>
+          <td class="px-4 py-2.5 text-right font-semibold">{{ row.stock }} {{ row.item.base_unit }}</td>
+          <td class="px-4 py-2.5 text-right">₹{{ row.avg_cost|floatformat:2 }}</td>
+          <td class="px-4 py-2.5">
+            {% if row.low_stock %}
+              <span class="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded font-medium">Low Stock</span>
+            {% else %}
+              <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded font-medium">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

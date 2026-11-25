@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Snacks ERP{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  {% if user.is_authenticated %}
+  <nav class="bg-indigo-900 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-6">
+        <a href="{% url 'dashboard' %}" class="font-bold text-lg tracking-tight">Murukku ERP</a>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <a href="{% url 'dashboard' %}" class="hover:text-indigo-200">Dashboard</a>
+          {% block nav_links %}{% endblock %}
+        </div>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="bg-indigo-700 px-2.5 py-1 rounded text-xs font-medium">
+          {{ user.first_name|default:user.username }} ({{ user.profile.get_role_display|default:"Admin" }})
+        </span>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="bg-rose-600 hover:bg-rose-700 px-3 py-1 rounded text-xs font-semibold">
+            Logout
+          </button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  {% endif %}
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    {% if messages %}
+      <div class="mb-4 space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded text-sm font-medium {% if message.tags == 'error' %}bg-rose-100 text-rose-800 border border-rose-200{% else %}bg-emerald-100 text-emerald-800 border border-emerald-200{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
