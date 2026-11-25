@@ -14,7 +14,12 @@
         <a href="{% url 'dashboard' %}" class="font-bold text-lg tracking-tight">Murukku ERP</a>
         <div class="flex flex-wrap gap-4 text-sm">
           <a href="{% url 'dashboard' %}" class="hover:text-indigo-200">Dashboard</a>
-          {% block nav_links %}{% endblock %}
+          {% if user.profile.role == "PRODUCTION" or user.profile.role == "ADMIN" or user.profile.role == "OWNER" %}
+            <a href="{% url 'purchases' %}" class="hover:text-indigo-200">Purchases</a>
+          {% endif %}
+          {% if user.profile.role != "SALESMAN" %}
+            <a href="{% url 'production_list' %}" class="hover:text-indigo-200">Production</a>
+          {% endif %}
         </div>
       </div>
       <div class="flex items-center gap-3 text-sm">

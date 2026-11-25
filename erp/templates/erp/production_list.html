@@ -1,0 +1,56 @@
+{% extends "erp/base.html" %}
+{% block title %}Production Runs | Snacks ERP{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Production Runs (BOM & Variance)</h1>
+    <p class="text-sm text-slate-500">Planned vs actual material usage, yield variance, and cost per packet</p>
+  </div>
+  {% if role == "PRODUCTION" or role == "ADMIN" %}
+    <a href="{% url 'production_create' %}" class="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+      + New Production Run
+    </a>
+  {% endif %}
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+        <tr>
+          <th class="px-4 py-2.5">Run Code</th>
+          <th class="px-4 py-2.5">Date</th>
+          <th class="px-4 py-2.5">Product</th>
+          <th class="px-4 py-2.5 text-right">Expected</th>
+          <th class="px-4 py-2.5 text-right">Actual</th>
+          <th class="px-4 py-2.5 text-right">Yield Var</th>
+          <th class="px-4 py-2.5 text-right">Cost / Pkt</th>
+          <th class="px-4 py-2.5">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        {% for r in runs %}
+        <tr>
+          <td class="px-4 py-2.5 font-mono text-xs font-semibold">{{ r.run_code }}</td>
+          <td class="px-4 py-2.5">{{ r.run_date }}</td>
+          <td class="px-4 py-2.5 font-medium">{{ r.bom.finished_item.name }} ({{ r.batches }} batch)</td>
+          <td class="px-4 py-2.5 text-right">{{ r.expected_output }}</td>
+          <td class="px-4 py-2.5 text-right font-semibold">{{ r.actual_output }}</td>
+          <td class="px-4 py-2.5 text-right">
+            <span class="px-2 py-0.5 rounded text-xs font-semibold {% if r.yield_variance_flagged %}bg-rose-100 text-rose-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+              {{ r.yield_variance_pct }}% {% if r.yield_variance_flagged %}FLAGGED{% endif %}
+            </span>
+          </td>
+          <td class="px-4 py-2.5 text-right font-semibold">₹{{ r.cost_per_packet }}</td>
+          <td class="px-4 py-2.5">
+            <a href="{% url 'production_detail' r.id %}" class="text-indigo-700 hover:underline font-medium">View / Overheads</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="px-4 py-6 text-center text-slate-400">No production runs logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
