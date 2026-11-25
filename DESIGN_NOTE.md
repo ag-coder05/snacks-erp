@@ -31,7 +31,7 @@ erDiagram
 ## 3. Stock Ledger & BOM Consumption Logic
 * **Exact Arithmetic:** All monetary fields use `DecimalField(max_digits=14, decimal_places=2)` and quantities use `DecimalField(max_digits=12, decimal_places=3)`. Unit conversions (`kg ↔ g`, `litre ↔ ml`, `carton ↔ packet`) are handled via `Decimal` factors in `erp/services.py`.
 * **Atomic Production Run:** When a supervisor saves a run for $B$ batches:
-  1. **Expected Output** = $\text{BOM.expected\_output} \times B$.
+  1. **Expected Output** = `BOM.expected_output` × $B$.
   2. **Yield Variance (%)** = $\frac{\text{Actual Output} - \text{Expected Output}}{\text{Expected Output}} \times 100$. Flagged if $|\text{variance}| > \text{tolerance}$ (default 3%).
   3. **Material Consumption:** For each BOM line, both `actual_qty` (`PROD_ISSUE`) and `wastage_qty` (`WASTAGE`) write negative `quantity_delta` rows to `StockLedger`, linked via `reference_type='ProductionRun'` and `reference_id=run.id`.
   4. **Material Variance (%)** = $\frac{(\text{Actual} + \text{Wastage}) - \text{Planned}}{\text{Planned}} \times 100$. Flagged if $|\text{variance}| > \text{tolerance}$.
