@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Tax Invoice {{ invoice.invoice_number }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #1e293b; padding: 24px; }
+    h1 { margin: 0; color: #312e81; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    th { background: #f1f5f9; }
+    .right { text-align: right; }
+    .meta { display: flex; justify-content: space-between; margin-top: 16px; }
+    @media print { .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:16px;">
+    <button onclick="window.print()" style="padding:8px 14px;background:#312e81;color:#fff;border:none;border-radius:6px;cursor:pointer;">Print / Save as PDF</button>
+  </div>
+  <h1>TAX INVOICE</h1>
+  <p><strong>Cauvery Traditional Snacks Pvt. Ltd.</strong> | GSTIN: 33AABCC9999K1Z5 | State: {{ factory_state }}</p>
+  <hr />
+  <div class="meta">
+    <div>
+      <strong>Bill To:</strong><br />
+      {{ invoice.customer.name }}<br />
+      {{ invoice.customer.address }}<br />
+      State: {{ invoice.customer.state }} | GSTIN: {{ invoice.customer.gstin|default:"Unregistered" }}
+    </div>
+    <div>
+      <strong>Invoice #:</strong> {{ invoice.invoice_number }}<br />
+      <strong>Date:</strong> {{ invoice.invoice_date }}<br />
+      <strong>Order #:</strong> {{ invoice.order.order_number }}
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>HSN</th>
+        <th class="right">Qty</th>
+        <th class="right">Rate (₹)</th>
+        <th class="right">GST %</th>
+        <th class="right">Taxable Value (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in lines %}
+      <tr>
+        <td>{{ l.item.name }}</td>
+        <td>{{ l.item.hsn_code }}</td>
+        <td class="right">{{ l.quantity }} {{ l.item.base_unit }}</td>
+        <td class="right">{{ l.unit_price }}</td>
+        <td class="right">{{ l.item.gst_rate }}%</td>
+        <td class="right">{{ l.line_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table style="width:45%; margin-left:auto;">
+    <tr><td>Taxable Value</td><td class="right">₹{{ invoice.taxable_value }}</td></tr>
+    {% if invoice.is_interstate %}
+      <tr><td>IGST (5%)</td><td class="right">₹{{ invoice.igst_amount }}</td></tr>
+    {% else %}
+      <tr><td>CGST (2.5%)</td><td class="right">₹{{ invoice.cgst_amount }}</td></tr>
+      <tr><td>SGST (2.5%)</td><td class="right">₹{{ invoice.sgst_amount }}</td></tr>
+    {% endif %}
+    <tr><th>Grand Total</th><th class="right">₹{{ invoice.total_amount }}</th></tr>
+  </table>
+</body>
+</html>

@@ -10,4 +10,11 @@ urlpatterns = [
     path("production/", views.production_list, name="production_list"),
     path("production/new/", views.production_create, name="production_create"),
     path("production/<int:pk>/", views.production_detail, name="production_detail"),
+    path("salesman/order/", views.salesman_order, name="salesman_order"),
+    path("orders/", views.orders_list, name="orders_list"),
+    path("orders/<int:pk>/", views.order_detail, name="order_detail"),
+    path("invoices/<int:pk>/pdf/", views.invoice_pdf, name="invoice_pdf"),
+    path("payments/", views.payments_view, name="payments"),
+    path("reports/", views.reports_hub, name="reports"),
+    path("reports/export/<str:report_type>/<str:fmt>/", views.export_report, name="export_report"),
 ]

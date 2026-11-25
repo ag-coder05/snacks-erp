@@ -1,0 +1,93 @@
+{% extends "erp/base.html" %}
+{% block title %}{{ order.order_number }} | Snacks ERP{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">{{ order.order_number }} — {{ order.customer.name }}</h1>
+    <p class="text-sm text-slate-500">
+      State: {{ order.customer.state }} | GST Type:
+      <strong class="text-indigo-800">{% if is_interstate %}Inter-State (IGST 5%){% else %}Intra-State (CGST 2.5% + SGST 2.5%){% endif %}</strong>
+      | Status: <strong>{{ order.status }}</strong>
+    </p>
+  </div>
+  <a href="{% url 'orders_list' %}" class="text-sm text-indigo-700 hover:underline">&larr; All Orders</a>
+</div>
+
+<!-- Stock Availability Check -->
+<div class="bg-white rounded-xl shadow-sm border overflow-hidden mb-6">
+  <div class="px-5 py-3 border-b bg-slate-50 font-semibold text-slate-700">Order Lines & Live Finished-Goods Stock Check</div>
+  <table class="w-full text-sm text-left">
+    <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+      <tr>
+        <th class="px-4 py-2.5">Product</th>
+        <th class="px-4 py-2.5 text-right">Ordered</th>
+        <th class="px-4 py-2.5 text-right">Available Stock</th>
+        <th class="px-4 py-2.5 text-right">Rate</th>
+        <th class="px-4 py-2.5 text-right">Line Total</th>
+        <th class="px-4 py-2.5">Stock Status</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y">
+      {% for c in stock_checks %}
+      <tr>
+        <td class="px-4 py-2.5 font-medium">{{ c.item.name }}</td>
+        <td class="px-4 py-2.5 text-right font-semibold">{{ c.ordered }}</td>
+        <td class="px-4 py-2.5 text-right">{{ c.available }}</td>
+        <td class="px-4 py-2.5 text-right">₹{{ c.line.unit_price }}</td>
+        <td class="px-4 py-2.5 text-right font-semibold">₹{{ c.line.line_total }}</td>
+        <td class="px-4 py-2.5">
+          {% if c.sufficient %}
+            <span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded font-semibold">In Stock</span>
+          {% else %}
+            <span class="bg-rose-100 text-rose-700 text-xs px-2 py-0.5 rounded font-semibold">Shortage of {{ c.shortage }} packets flagged!</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Admin Actions -->
+{% if role == "ADMIN" %}
+<div class="bg-white p-5 rounded-xl shadow-sm border mb-6 flex flex-wrap gap-3 items-center">
+  {% if order.status == "SUBMITTED" %}
+    <form method="post">{% csrf_token %}<button name="action" value="approve" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Approve Order</button></form>
+    <form method="post">{% csrf_token %}<button name="action" value="reject" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Reject</button></form>
+  {% endif %}
+  {% if not invoice and order.status != "REJECTED" %}
+    <form method="post">{% csrf_token %}<button name="action" value="invoice" class="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-semibold">Generate GST Invoice</button></form>
+  {% endif %}
+  {% if invoice and not invoice.is_dispatched and not invoice.is_cancelled %}
+    <form method="post">{% csrf_token %}<button name="action" value="dispatch" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Record Dispatch (Deduct Stock)</button></form>
+  {% endif %}
+  {% if invoice and not invoice.is_cancelled %}
+    <form method="post">{% csrf_token %}<button name="action" value="cancel_invoice" class="border border-rose-500 text-rose-700 hover:bg-rose-50 px-4 py-2 rounded-lg text-sm font-semibold">Cancel via Credit Note</button></form>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Generated GST Invoice Summary -->
+{% if invoice %}
+<div class="bg-white p-6 rounded-xl shadow-sm border">
+  <div class="flex flex-wrap justify-between items-center mb-4">
+    <div>
+      <h2 class="text-lg font-bold text-indigo-900">GST Tax Invoice: {{ invoice.invoice_number }}</h2>
+      <p class="text-xs text-slate-500">
+        {% if invoice.is_cancelled %}<span class="text-rose-600 font-bold">CANCELLED (CREDIT NOTE ISSUED)</span>{% elif invoice.is_dispatched %}Dispatched on {{ invoice.dispatched_at }}{% else %}Pending Dispatch{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'invoice_pdf' invoice.id %}" target="_blank" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+      Download / Print GST PDF
+    </a>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm bg-slate-50 p-4 rounded-lg">
+    <div><p class="text-xs text-slate-500">Taxable Value</p><p class="font-bold">₹{{ invoice.taxable_value }}</p></div>
+    <div><p class="text-xs text-slate-500">CGST</p><p class="font-bold">₹{{ invoice.cgst_amount }}</p></div>
+    <div><p class="text-xs text-slate-500">SGST</p><p class="font-bold">₹{{ invoice.sgst_amount }}</p></div>
+    <div><p class="text-xs text-slate-500">IGST</p><p class="font-bold">₹{{ invoice.igst_amount }}</p></div>
+    <div><p class="text-xs text-slate-500">Grand Total</p><p class="font-bold text-indigo-900 text-base">₹{{ invoice.total_amount }}</p></div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
